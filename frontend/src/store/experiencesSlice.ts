@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { supabase } from '../lib/supabase';
 import { Experience, Slot } from '../types';
+import axiosInstance from '../config/axiosInstance';
 
 interface ExperiencesState {
   items: Experience[];
@@ -21,37 +21,17 @@ const initialState: ExperiencesState = {
 export const fetchExperiences = createAsyncThunk(
   'experiences/fetchAll',
   async () => {
-    const { data, error } = await supabase
-      .from('experiences')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (error) throw error;
-    return data as Experience[];
+    const response = await axiosInstance.get('/experiences');
+    console.log(response.data);
+    return response.data.data as Experience[];
   }
 );
 
 export const fetchExperienceById = createAsyncThunk(
   'experiences/fetchById',
   async (id: string) => {
-    const { data: experience, error: expError } = await supabase
-      .from('experiences')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (expError) throw expError;
-
-    const { data: slots, error: slotsError } = await supabase
-      .from('slots')
-      .select('*')
-      .eq('experience_id', id)
-      .order('date', { ascending: true })
-      .order('time', { ascending: true });
-
-    if (slotsError) throw slotsError;
-
-    return { experience: experience as Experience, slots: slots as Slot[] };
+    const response = await axiosInstance.get(`/experiences/${id}`);
+    return response.data.data as { experience: Experience, slots: Slot[] };
   }
 );
 

@@ -1,5 +1,5 @@
 export interface Experience {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   image_url: string;
@@ -9,7 +9,7 @@ export interface Experience {
 }
 
 export interface Slot {
-  id: string;
+  _id: string;
   experience_id: string;
   date: string;
   time: string;

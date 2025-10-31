@@ -36,7 +36,7 @@ export default function ExperienceCard({ experience }: ExperienceCardProps) {
             <span className="text-xl font-bold text-gray-900">₹{experience.price}</span>
           </div>
           <button
-            onClick={() => navigate(`/experience/${experience.id}`)}
+            onClick={() => navigate(`/experience/${experience._id}`)}
             className="bg-yellow-400 text-black px-5 py-2 rounded-lg font-medium hover:bg-yellow-500 transition-colors"
           >
             View Details

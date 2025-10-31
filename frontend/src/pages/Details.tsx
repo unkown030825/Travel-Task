@@ -5,7 +5,6 @@ import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import { fetchExperienceById } from '../store/experiencesSlice';
 import { setSelectedExperience, setSelectedSlot, setQuantity } from '../store/bookingSlice';
 import Loader from '../components/Loader';
-import { Slot } from '../types';
 
 export default function Details() {
   const { id } = useParams<{ id: string }>();
@@ -33,18 +32,23 @@ export default function Details() {
       setSelectedDate(currentSlots[0].date);
     }
   }, [currentSlots, selectedDate]);
+  console.log(selectedDate);
 
-  const uniqueDates = [...new Set(currentSlots.map((slot) => slot.date))];
+const uniqueDates = [
+  ...new Set(currentSlots.map((slot) => slot.date.slice(0, 10))),
+];
+const availableTimesForDate = currentSlots.filter(
+  (slot) => slot.date.slice(0, 10) === selectedDate
+);
 
-  const availableTimesForDate = currentSlots.filter(
-    (slot) => slot.date === selectedDate
-  );
-
-  const selectedSlotData = currentSlots.find(
-    (slot) => slot.date === selectedDate && slot.time === selectedTime
-  );
+const selectedSlotData = currentSlots.find(
+  (slot) =>
+    slot.date.slice(0, 10) === selectedDate && slot.time === selectedTime
+);
 
   const handleConfirm = () => {
+    console.log("object");
+    console.log(selectedSlotData,currentExperience);
     if (currentExperience && selectedSlotData) {
       dispatch(setSelectedExperience(currentExperience));
       dispatch(setSelectedSlot(selectedSlotData));
@@ -122,33 +126,31 @@ export default function Details() {
 
             <p className="text-gray-600 mb-8">{currentExperience.description}</p>
 
-            <div className="bg-white rounded-xl p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Choose date</h2>
-              <div className="flex gap-3 flex-wrap">
-                {uniqueDates.map((date) => {
-                  const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString(
-                    'en-US',
-                    { month: 'short', day: 'numeric' }
-                  );
-                  return (
-                    <button
-                      key={date}
-                      onClick={() => {
-                        setSelectedDate(date);
-                        setSelectedTime(null);
-                      }}
-                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                        selectedDate === date
-                          ? 'bg-yellow-400 text-black'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {formattedDate}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+           <div className="bg-white rounded-xl p-6 mb-6">
+  <h2 className="text-xl font-semibold mb-4">Choose date</h2>
+  <div className="flex gap-3 flex-wrap">
+    {uniqueDates.map((date) => {
+      return (
+   <button
+  key={date}
+  onClick={() => setSelectedDate(date)}
+  className={`px-4 py-2 rounded-lg transition-all ${
+    selectedDate === date
+      ? 'bg-yellow-400 text-black'
+      : 'bg-gray-100 hover:bg-gray-200'
+  }`}
+>
+  {new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })}
+</button>
+
+      )
+    })}
+  </div>
+</div>
+
 
             <div className="bg-white rounded-xl p-6">
               <h2 className="text-xl font-semibold mb-4">Choose time</h2>
@@ -156,13 +158,13 @@ export default function Details() {
                 All times are in IST (GMT +5:30)
               </p>
               <div className="flex gap-3 flex-wrap">
-                {availableTimesForDate.map((slot) => {
+                {availableTimesForDate.map((slot,idx) => {
                   const isSoldOut = slot.available_count === 0;
                   const leftCount = slot.available_count;
 
                   return (
                     <button
-                      key={slot.id}
+                      key={idx}
                       onClick={() => !isSoldOut && setSelectedTime(slot.time)}
                       disabled={isSoldOut}
                       className={`px-6 py-3 rounded-lg font-medium transition-colors relative ${

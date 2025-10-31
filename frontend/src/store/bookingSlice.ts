@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { supabase } from '../lib/supabase';
 import { Booking, BookingState, Experience, Slot } from '../types';
+import axiosInstance from '../config/axiosInstance';
 
 const initialState: BookingState = {
   selectedExperience: null,
@@ -20,44 +20,26 @@ const initialState: BookingState = {
 export const validatePromoCode = createAsyncThunk(
   'booking/validatePromo',
   async (code: string) => {
-    const { data, error } = await supabase
-      .from('promo_codes')
-      .select('*')
-      .eq('code', code.toUpperCase())
-      .eq('active', true)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) throw new Error('Invalid promo code');
-
-    return data;
+    const response = await axiosInstance.post('/promo/validate', { code });
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Invalid promo code');
+    }
+    
+    return response.data.data;
   }
 );
 
 export const createBooking = createAsyncThunk(
   'booking/create',
-  async (bookingData: Booking) => {
-    const referenceId = `${bookingData.experience_id.slice(0, 3).toUpperCase()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert({
-        ...bookingData,
-        reference_id: referenceId,
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await supabase
-      .from('slots')
-      .update({
-        available_count: supabase.sql`available_count - ${bookingData.quantity}`
-      })
-      .eq('id', bookingData.slot_id);
-
-    return data as Booking;
+  async (bookingData: any) => {
+    const response = await axiosInstance.post('/bookings', bookingData);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to create booking');
+    }
+    
+    return response.data.data;
   }
 );
 
@@ -104,6 +86,7 @@ const bookingSlice = createSlice({
       })
       .addCase(validatePromoCode.fulfilled, (state, action) => {
         state.loading = false;
+        state.discount = action.payload.value;
       })
       .addCase(validatePromoCode.rejected, (state, action) => {
         state.error = action.error.message || 'Invalid promo code';
@@ -117,6 +100,13 @@ const bookingSlice = createSlice({
       .addCase(createBooking.fulfilled, (state, action: PayloadAction<Booking>) => {
         state.lastBooking = action.payload;
         state.loading = false;
+        // Clear form after successful booking
+        state.selectedExperience = null;
+        state.selectedSlot = null;
+        state.quantity = 1;
+        state.userInfo = { name: '', email: '' };
+        state.promoCode = '';
+        state.discount = 0;
       })
       .addCase(createBooking.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to create booking';

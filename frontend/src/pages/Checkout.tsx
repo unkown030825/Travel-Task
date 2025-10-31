@@ -78,8 +78,8 @@ export default function Checkout() {
     try {
       await dispatch(
         createBooking({
-          experience_id: selectedExperience.id,
-          slot_id: selectedSlot.id,
+          experience_id: selectedExperience._id,
+          slot_id: selectedSlot._id,
           user_name: userInfo.name,
           user_email: userInfo.email,
           quantity,

@@ -7,7 +7,7 @@ import Loader from '../components/Loader';
 export default function Home() {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((state) => state.experiences);
-
+console.log(items);
   useEffect(() => {
     dispatch(fetchExperiences());
   }, [dispatch]);
@@ -28,8 +28,8 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {items.map((experience) => (
-            <ExperienceCard key={experience.id} experience={experience} />
+          {items.map((experience:any) => (
+            <ExperienceCard key={experience._id} experience={experience} />
           ))}
         </div>
       </div>
